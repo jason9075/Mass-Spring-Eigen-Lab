@@ -42,6 +42,17 @@ const elC1     = document.getElementById('c1-val');
 const elC2     = document.getElementById('c2-val');
 const labelAxisX = document.getElementById('label-axis-x');
 const labelAxisY = document.getElementById('label-axis-y');
+const ampTooltip  = document.getElementById('amp-tooltip');
+const attName     = document.getElementById('att-name');
+const attDaLabel  = document.getElementById('att-da-label');
+const attDbLabel  = document.getElementById('att-db-label');
+const attDa       = document.getElementById('att-da');
+const attDb       = document.getElementById('att-db');
+const attV0       = document.getElementById('att-v0');
+const attV1       = document.getElementById('att-v1');
+const attTerm0    = document.getElementById('att-term0');
+const attTerm1    = document.getElementById('att-term1');
+const attResult   = document.getElementById('att-result');
 const forceTooltip = document.getElementById('force-tooltip');
 const fttName     = document.getElementById('ftt-name');
 const fttF1Label  = document.getElementById('ftt-f1-label');
@@ -151,6 +162,7 @@ const drag  = { active: false, mass: null, cursor: new THREE.Vector3() };
 const hover = { mass: null, cx: 0, cy: 0 };
 const springHover = { spring: null, cx: 0, cy: 0 };
 const forceHover  = { mass: null, cx: 0, cy: 0 };
+const ampHover    = { mode: null, cx: 0, cy: 0 };
 
 function getDragForce() {
   if (!drag.active || !drag.mass) return null;
@@ -443,6 +455,15 @@ fbNetRow.addEventListener('pointerenter', (e) => { forceHover.mass = 'b'; forceH
 fbNetRow.addEventListener('pointermove',  (e) => { forceHover.cx = e.clientX; forceHover.cy = e.clientY; });
 fbNetRow.addEventListener('pointerleave', () => { forceHover.mass = null; forceTooltip.hidden = true; });
 
+const c1Row = document.getElementById('c1-row');
+const c2Row = document.getElementById('c2-row');
+c1Row.addEventListener('pointerenter', (e) => { ampHover.mode = 1; ampHover.cx = e.clientX; ampHover.cy = e.clientY; });
+c1Row.addEventListener('pointermove',  (e) => { ampHover.cx = e.clientX; ampHover.cy = e.clientY; });
+c1Row.addEventListener('pointerleave', () => { ampHover.mode = null; ampTooltip.hidden = true; });
+c2Row.addEventListener('pointerenter', (e) => { ampHover.mode = 2; ampHover.cx = e.clientX; ampHover.cy = e.clientY; });
+c2Row.addEventListener('pointermove',  (e) => { ampHover.cx = e.clientX; ampHover.cy = e.clientY; });
+c2Row.addEventListener('pointerleave', () => { ampHover.mode = null; ampTooltip.hidden = true; });
+
 // ── Matrix board update ───────────────────────────────────
 function updateBoard() {
   const { K, l1, l2, f1, f2, v1, v2 } = eigen;
@@ -562,6 +583,42 @@ function updateSpringTooltip() {
   springTooltip.style.left = `${springHover.cx + 16}px`;
   springTooltip.style.top  = `${springHover.cy - 10}px`;
   springTooltip.hidden = false;
+}
+
+function updateAmpTooltip() {
+  if (!ampHover.mode) { ampTooltip.hidden = true; return; }
+  const eq = getEquilibrium();
+  const { v1, v2 } = eigen;
+
+  let da, db, v, axisLabel;
+  if (ampHover.mode === 1) {
+    da = pos.ax - eq.ax;
+    db = pos.bx - eq.bx;
+    v  = v1;
+    axisLabel = 'x';
+    attName.textContent = 'c₁ = v₁ᵀ · δx  (swing mode)';
+  } else {
+    da = pos.ay - eq.ay;
+    db = pos.by - eq.by;
+    v  = v2;
+    axisLabel = 'y';
+    attName.textContent = 'c₂ = v₂ᵀ · δy  (stretch mode)';
+  }
+
+  attDaLabel.textContent = axisLabel + 'ₐ';
+  attDbLabel.textContent = axisLabel + '_B';
+  attDa.textContent      = signed(da, 3);
+  attDb.textContent      = signed(db, 3);
+  attV0.textContent      = signed(v[0], 2);
+  attV1.textContent      = signed(v[1], 2);
+  attTerm0.textContent   = signed(v[0] * da, 3);
+  attTerm1.textContent   = signed(v[1] * db, 3);
+  attResult.textContent  = signed(v[0] * da + v[1] * db, 3);
+
+  ampTooltip.style.left   = `${ampHover.cx + 16}px`;
+  ampTooltip.style.top    = 'auto';
+  ampTooltip.style.bottom = `${window.innerHeight - ampHover.cy + 10}px`;
+  ampTooltip.hidden = false;
 }
 
 function updateForceTooltip() {
@@ -996,6 +1053,7 @@ function animate() {
   updateTooltip();
   updateSpringTooltip();
   updateForceTooltip();
+  updateAmpTooltip();
   renderer.render(scene, camera);
 }
 
