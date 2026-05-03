@@ -698,15 +698,35 @@ const MODAL = {
     <p>
       <span style="color:#D08770">■ <strong>Mode 2 — The Stretch</strong>
       (high frequency, $f_2 \\approx 0.87\\,\\text{Hz}$)</span><br>
-      Eigenvector <span style="color:#D08770">$\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-3}\\end{bmatrix}$</span>.
+      Eigenvector <span style="color:#D08770">$\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-1}\\end{bmatrix}$</span>.
       The entries have <em>opposite signs</em>: A goes up while B goes down (or vice versa).
       The spring between them is being stretched and compressed rapidly.
     </p>
 
     <p><strong>Step 5 — Numerical integration (Velocity Verlet)</strong></p>
     <p>
-      Each animation frame the simulator advances time by $\\Delta t = 1/120\\,\\text{s}$.
-      Velocity Verlet keeps energy stable by using the average acceleration across the step:
+      The eigenvalue analysis above tells us the <em>shape</em> of the motion, but not how it unfolds in time.
+      To animate the system, we must numerically integrate Newton's law $F = ma$ frame by frame.
+    </p>
+    <p>The simulation loop each frame:</p>
+    <pre><code class="language-js">// State: positions and velocities are already known from the previous step.
+// Step A — geometry → deformation (Hooke's ΔX)
+const ext = currentLength - restLength;        // ΔX = len − REST
+// Step B — deformation → force  (Hooke's law: F = k · ΔX)
+const F = -k * ext * unitDirection;
+// Step C — force → acceleration  (Newton: a = F / m)
+const accel = F / mass;
+// Step D — integrate → new positions and velocities</code></pre>
+    <p>
+      Notice that $\\Delta X$ is a <em>geometric</em> quantity computed purely from positions —
+      it does not require knowing the force first.
+      Force is then derived from $\\Delta X$ via Hooke's law, making the chain
+      $\\text{positions} \\to \\Delta X \\to F \\to a \\to \\text{new positions}$ one-directional.
+    </p>
+    <p>
+      A naïve <strong>Euler</strong> integrator would use only the current acceleration, which
+      causes energy to drift upward over time (the spring appears to gain energy from nothing).
+      <strong>Velocity Verlet</strong> fixes this by averaging the acceleration <em>before and after</em> the position update:
     </p>
     <pre><code class="language-js">// 1. predict new position using current velocity + half-step acceleration
 pos += vel * DT + 0.5 * accel * DT * DT;
@@ -714,6 +734,10 @@ pos += vel * DT + 0.5 * accel * DT * DT;
 const accelNew = computeForces(pos) / mass;
 // 3. update velocity using the average of old and new acceleration
 vel = (vel + 0.5 * (accel + accelNew) * DT) * damping;</code></pre>
+    <p>
+      This second-order scheme conserves energy far better than Euler for the same step size,
+      keeping the simulation stable even at $\\Delta t = 1/120\\,\\text{s}$.
+    </p>
   `,
   zhTW: `
     <p><strong>第零步 — 彈簧係數 $k$ 是什麼？</strong></p>
@@ -798,15 +822,34 @@ vel = (vel + 0.5 * (accel + accelNew) * DT) * damping;</code></pre>
     <p>
       <span style="color:#D08770">■ <strong>模式二 — 反向拉伸 (The Stretch)</strong>
       （高頻，$f_2 \\approx 0.87\\,\\text{Hz}$）</span><br>
-      振型向量 <span style="color:#D08770">$\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-3}\\end{bmatrix}$</span>。
+      振型向量 <span style="color:#D08770">$\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-1}\\end{bmatrix}$</span>。
       兩個分量<em>異號</em>：A 向上時 B 向下（或反之）。
       中間的彈簧被快速拉伸與壓縮。
     </p>
 
     <p><strong>第五步 — 數值積分（Velocity Verlet）</strong></p>
     <p>
-      每個動畫幀推進 $\\Delta t = 1/120\\,\\text{s}$。
-      Velocity Verlet 用「前後加速度平均」更新速度，確保能量不會無限膨脹：
+      特徵值分析告訴我們運動的<em>形狀</em>，但無法告訴我們它如何隨時間展開。
+      要讓系統動起來，必須逐幀對牛頓第二定律 $F = ma$ 做數值積分。
+    </p>
+    <p>每一幀的模擬循環：</p>
+    <pre><code class="language-js">// 狀態：位置與速度已從上一步得知。
+// A — 幾何 → 形變量（虎克定律的 ΔX）
+const ext = currentLength - restLength;        // ΔX = len − REST
+// B — 形變量 → 力（虎克定律：F = k · ΔX）
+const F = -k * ext * unitDirection;
+// C — 力 → 加速度（牛頓：a = F / m）
+const accel = F / mass;
+// D — 積分 → 新位置與速度</code></pre>
+    <p>
+      注意：$\\Delta X$ 是純粹從<em>位置</em>算出的幾何量，不需要先知道力。
+      力再由 $\\Delta X$ 透過虎克定律推導出來，整條計算鏈是單向的：
+      $\\text{位置} \\to \\Delta X \\to F \\to a \\to \\text{新位置}$。
+    </p>
+    <p>
+      若使用最簡單的 <strong>Euler 積分</strong>，每步只用當前加速度更新，
+      能量會隨時間不斷上漲（彈簧像是憑空增加能量）。
+      <strong>Velocity Verlet</strong> 的做法是在位置更新前後各算一次加速度，再取平均來更新速度：
     </p>
     <pre><code class="language-js">// 1. 用目前速度 + 半步加速度預測新位置
 pos += vel * DT + 0.5 * accel * DT * DT;
@@ -814,6 +857,10 @@ pos += vel * DT + 0.5 * accel * DT * DT;
 const accelNew = computeForces(pos) / mass;
 // 3. 用新舊加速度的平均值更新速度
 vel = (vel + 0.5 * (accel + accelNew) * DT) * damping;</code></pre>
+    <p>
+      這個二階方法在相同步長下能量保持得遠比 Euler 好，
+      讓模擬在 $\\Delta t = 1/120\\,\\text{s}$ 的條件下依然穩定。
+    </p>
   `,
 };
 
