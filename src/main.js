@@ -16,14 +16,18 @@ const labelA  = document.getElementById('label-a');
 const labelB  = document.getElementById('label-b');
 const labelS1 = document.getElementById('label-s1');
 const labelS2 = document.getElementById('label-s2');
-const elK11 = document.getElementById('k11');
-const elK12 = document.getElementById('k12');
-const elK21 = document.getElementById('k21');
-const elK22 = document.getElementById('k22');
-const elL1  = document.getElementById('lam1');
-const elL2  = document.getElementById('lam2');
-const elF1  = document.getElementById('freq1');
-const elF2  = document.getElementById('freq2');
+const elK11   = document.getElementById('k11');
+const elK12   = document.getElementById('k12');
+const elK21   = document.getElementById('k21');
+const elK22   = document.getElementById('k22');
+const elL1    = document.getElementById('lam1');
+const elL2    = document.getElementById('lam2');
+const elF1    = document.getElementById('freq1');
+const elF2    = document.getElementById('freq2');
+const elExt1  = document.getElementById('ext1');
+const elExt2  = document.getElementById('ext2');
+const elFaNet = document.getElementById('fa-net');
+const elFbNet = document.getElementById('fb-net');
 
 // ── Renderer ──────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -365,6 +369,28 @@ function updateBoard() {
 }
 updateBoard();
 
+// ── Live force display ────────────────────────────────────
+function signed(v, dec) {
+  return (v >= 0 ? '+' : '') + v.toFixed(dec);
+}
+
+function updateForceDisplay() {
+  const dx1 = pos.ax - ANCHOR.x, dy1 = pos.ay - ANCHOR.y;
+  const len1 = Math.hypot(dx1, dy1) || 1e-4;
+  const ext1 = len1 - REST;
+  const f1y  = -P.k1 * ext1 * dy1 / len1;
+
+  const dx2 = pos.bx - pos.ax, dy2 = pos.by - pos.ay;
+  const len2 = Math.hypot(dx2, dy2) || 1e-4;
+  const ext2 = len2 - REST;
+  const f2y  = P.k2 * ext2 * dy2 / len2;
+
+  elExt1.textContent  = signed(ext1, 3);
+  elExt2.textContent  = signed(ext2, 3);
+  elFaNet.textContent = signed(f1y + f2y, 2);
+  elFbNet.textContent = signed(-f2y, 2);
+}
+
 // ── Modal content ─────────────────────────────────────────
 let modalLang = 'en';
 
@@ -408,8 +434,16 @@ const MODAL = {
       (diagonal, each entry is one mass), and
       $$K = \\begin{bmatrix} k_1+k_2 & -k_2 \\\\ -k_2 & k_2 \\end{bmatrix}$$
       is the <strong>stiffness matrix</strong>.
-      The off-diagonal $-k_2$ entries encode the coupling: if A moves, it also pulls B (and vice versa).
     </p>
+    <p>
+      Reading the live panel's $K$ matrix entry by entry:
+    </p>
+    <ul>
+      <li><strong>$K_{11} = k_1+k_2$</strong>: Mass A is attached to <em>both</em> springs, so both resist its motion — their stiffnesses add up.</li>
+      <li><strong>$K_{22} = k_2$</strong>: Mass B is only attached to spring 2, so its self-restoring stiffness is just $k_2$.</li>
+      <li><strong>$K_{12} = K_{21} = -k_2$</strong>: The coupling term. When A displaces by 1, spring 2 pulls B by $k_2$, and vice versa. The minus sign means they pull each other — displacement in one mass reduces the net force needed by the other.</li>
+    </ul>
+    <p>Try dragging $k_2$ higher in the Parameters panel: $K_{22}$ and the coupling $-k_2$ both grow, tightening the link between A and B.</p>
 
     <p><strong>Step 3 — Find the natural frequencies (eigenvalue problem)</strong></p>
     <p>
@@ -427,6 +461,17 @@ const MODAL = {
       $$f_n = \\frac{\\omega_n}{2\\pi} = \\frac{1}{2\\pi}\\sqrt{\\frac{\\lambda_n}{m}}
       \\quad (\\lambda_n = \\omega_n^2 m)$$
     </p>
+    <p>
+      Reading the live panel's $\\lambda_1,\\,\\lambda_2$:
+      a <em>small</em> eigenvalue means the system meets weak opposition for that mode — it vibrates slowly.
+      A <em>large</em> eigenvalue means stiff opposition — the system snaps back hard and vibrates fast.
+      With the defaults $k_1\\!=\\!15,\\,k_2\\!=\\!10$:
+    </p>
+    <ul>
+      <li><strong>$\\lambda_1 = 5$</strong> → $f_1 \\approx 0.36\\,\\text{Hz}$ — one full swing every ~2.8 s. This is <span style="color:#88C0D0">The Swing</span>.</li>
+      <li><strong>$\\lambda_2 = 30$</strong> → $f_2 \\approx 0.87\\,\\text{Hz}$ — one full cycle every ~1.1 s. This is <span style="color:#D08770">The Stretch</span>.</li>
+    </ul>
+    <p>Rule of thumb: stiffer springs or lighter masses → larger $\\lambda$ → higher frequency.</p>
 
     <p><strong>Step 4 — The two modes</strong></p>
     <p>
@@ -491,8 +536,15 @@ vel = (vel + 0.5 * (accel + accelNew) * DT) * damping;</code></pre>
       $$M\\,\\ddot{\\mathbf{x}} = -K\\,\\mathbf{x}$$
       其中 $M = \\begin{bmatrix} m_1 & 0 \\\\ 0 & m_2 \\end{bmatrix}$ 為<strong>質量矩陣</strong>（對角線），
       $$K = \\begin{bmatrix} k_1+k_2 & -k_2 \\\\ -k_2 & k_2 \\end{bmatrix}$$
-      為<strong>剛度矩陣</strong>。非對角線的 $-k_2$ 代表兩顆球的「耦合」：A 動了，會透過彈簧牽動 B。
+      為<strong>剛度矩陣</strong>。
     </p>
+    <p>逐項對照左下角的看板：</p>
+    <ul>
+      <li><strong>$K_{11} = k_1+k_2$</strong>：質點 A 同時被兩段彈簧拉著，兩者的硬度相加，所以自回復剛度最大。</li>
+      <li><strong>$K_{22} = k_2$</strong>：質點 B 只靠彈簧 2 支撐，自回復剛度就是 $k_2$。</li>
+      <li><strong>$K_{12} = K_{21} = -k_2$</strong>：耦合項。A 移動 1 單位，透過彈簧 2 對 B 施加 $k_2$ 的力，反之亦然。負號代表互相牽制——某一方位移，反而減輕了另一方所需的回復力。</li>
+    </ul>
+    <p>試試在 Parameters 面板把 $k_2$ 調大：看板上的 $K_{22}$ 和耦合項 $-k_2$ 會同步增加，兩顆球之間的連動會更緊密。</p>
 
     <p><strong>第三步 — 求自然頻率（特徵值問題）</strong></p>
     <p>
@@ -509,6 +561,17 @@ vel = (vel + 0.5 * (accel + accelNew) * DT) * damping;</code></pre>
       $$f_n = \\frac{\\omega_n}{2\\pi} = \\frac{1}{2\\pi}\\sqrt{\\frac{\\lambda_n}{m}}
       \\quad (\\lambda_n = \\omega_n^2 m)$$
     </p>
+    <p>
+      如何解讀看板上的 $\\lambda_1,\\,\\lambda_2$：
+      <em>小</em>的特徵值代表系統在該模式下受到的回復力弱，振動慢；
+      <em>大</em>的特徵值代表剛度強，系統彈回快，頻率高。
+      以預設值 $k_1\\!=\\!15,\\,k_2\\!=\\!10$ 為例：
+    </p>
+    <ul>
+      <li><strong>$\\lambda_1 = 5$</strong> → $f_1 \\approx 0.36\\,\\text{Hz}$，約每 2.8 秒振一次。這就是<span style="color:#88C0D0">同向擺動</span>。</li>
+      <li><strong>$\\lambda_2 = 30$</strong> → $f_2 \\approx 0.87\\,\\text{Hz}$，約每 1.1 秒振一次。這就是<span style="color:#D08770">反向拉伸</span>。</li>
+    </ul>
+    <p>口訣：彈簧越硬（$k$ 越大）或質量越輕（$m$ 越小）→ $\\lambda$ 越大 → 頻率越高。</p>
 
     <p><strong>第四步 — 兩種振動模式</strong></p>
     <p>
@@ -654,6 +717,7 @@ function animate() {
     pullLine.visible = false;
   }
 
+  updateForceDisplay();
   renderer.render(scene, camera);
 }
 
