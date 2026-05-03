@@ -266,6 +266,15 @@
       font-size: 0.7rem;
       letter-spacing: 0.04em;
     }
+
+    .ev-label {
+      font-size: 0.78rem;
+      font-weight: bold;
+      text-shadow: 0 0 6px var(--nord0), 0 0 12px var(--nord0);
+    }
+
+    #label-v1 { color: var(--nord8); }
+    #label-v2 { color: var(--nord12); }
   </style>
 </head>
 <body>
@@ -323,6 +332,11 @@
       <div class="ev1">F<sub>A</sub> = <span id="fa-net" class="fval">+0.00</span></div>
       <div class="ev2">F<sub>B</sub> = <span id="fb-net" class="fval">+0.00</span></div>
     </div>
+    <div class="board-forces">
+      <div class="board-sub-title">Modal Amplitude  c = vᵀ·δy</div>
+      <div class="ev1">c₁ = <span id="c1-val" class="fval">+0.000</span> m</div>
+      <div class="ev2">c₂ = <span id="c2-val" class="fval">+0.000</span> m</div>
+    </div>
   </div>
 
   <div id="drag-hint">drag mass A or B to perturb</div>
@@ -332,6 +346,8 @@
   <div class="scene-label mass-label" id="label-b">B</div>
   <div class="scene-label spring-label" id="label-s1">Spring 1</div>
   <div class="scene-label spring-label" id="label-s2">Spring 2</div>
+  <div class="scene-label ev-label" id="label-v1">v₁</div>
+  <div class="scene-label ev-label" id="label-v2">v₂</div>
 
   <!-- Math Modal -->
   <div id="math-modal" role="dialog" aria-modal="true" aria-labelledby="math-title" hidden>

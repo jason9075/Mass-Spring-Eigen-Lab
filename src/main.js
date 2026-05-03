@@ -16,6 +16,8 @@ const labelA  = document.getElementById('label-a');
 const labelB  = document.getElementById('label-b');
 const labelS1 = document.getElementById('label-s1');
 const labelS2 = document.getElementById('label-s2');
+const labelV1 = document.getElementById('label-v1');
+const labelV2 = document.getElementById('label-v2');
 const elK11   = document.getElementById('k11');
 const elK12   = document.getElementById('k12');
 const elK21   = document.getElementById('k21');
@@ -28,6 +30,8 @@ const elExt1  = document.getElementById('ext1');
 const elExt2  = document.getElementById('ext2');
 const elFaNet = document.getElementById('fa-net');
 const elFbNet = document.getElementById('fb-net');
+const elC1    = document.getElementById('c1-val');
+const elC2    = document.getElementById('c2-val');
 
 // ── Renderer ──────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -171,11 +175,11 @@ function setMode(mode) {
   resetToEquilibrium();
   computeEigen();
   if (mode === 1) {
-    // In-phase swing: horizontal displacement ∝ v1
-    pos.ax += eigen.v1[0] * AMP;
-    pos.bx += eigen.v1[1] * AMP;
+    // Mode 1: both masses displaced vertically in same direction, B more than A
+    pos.ay += eigen.v1[0] * AMP;
+    pos.by += eigen.v1[1] * AMP;
   } else {
-    // Out-of-phase stretch: vertical displacement ∝ v2
+    // Mode 2: A and B displaced in opposite vertical directions
     pos.ay += eigen.v2[0] * AMP;
     pos.by += eigen.v2[1] * AMP;
   }
@@ -237,7 +241,7 @@ function updateSpring(line, fx, fy, tx, ty) {
 
 // ── Eigenvector arrows ────────────────────────────────────
 // Nord8 (#88C0D0) for v1, Nord12 (#D08770) for v2
-const ARROW_SCALE = 0.38;
+const ARROW_SCALE = 0.55;
 
 function makeArrow(color) {
   const arr = new THREE.ArrowHelper(
@@ -389,6 +393,16 @@ function updateForceDisplay() {
   elExt2.textContent  = signed(ext2, 3);
   elFaNet.textContent = signed(f1y + f2y, 2);
   elFbNet.textContent = signed(-f2y, 2);
+}
+
+function updateModalAmplitudes() {
+  const eq = getEquilibrium();
+  const dya = pos.ay - eq.ay;
+  const dyb = pos.by - eq.by;
+  const { v1, v2 } = eigen;
+  // Project vertical displacement onto each normalised eigenvector
+  elC1.textContent = signed(v1[0] * dya + v1[1] * dyb, 3);
+  elC2.textContent = signed(v2[0] * dya + v2[1] * dyb, 3);
 }
 
 // ── Modal content ─────────────────────────────────────────
@@ -692,18 +706,23 @@ function animate() {
   updateSpring(spring1Line, ANCHOR.x, ANCHOR.y, pos.ax, pos.ay);
   updateSpring(spring2Line, pos.ax, pos.ay, pos.bx, pos.by);
 
-  // Update eigenvector arrows (always visible, show eigenspace)
+  // Eigenvector arrows — both pairs vertical, representing physical mode shapes.
+  // v₁ (blue, right): both components same sign → both arrows point same direction.
+  // v₂ (orange, left): components opposite sign → A up, B down.
   const { v1, v2 } = eigen;
-  updateArrow(arrV1A, pos.ax + 0.28, pos.ay,  1, 0, v1[0]);
-  updateArrow(arrV1B, pos.bx + 0.28, pos.by,  1, 0, v1[1]);
-  updateArrow(arrV2A, pos.ax - 0.28, pos.ay,  0, Math.sign(v2[0]) || 1,  Math.abs(v2[0]));
-  updateArrow(arrV2B, pos.bx - 0.28, pos.by,  0, Math.sign(v2[1]) || -1, Math.abs(v2[1]));
+  updateArrow(arrV1A, pos.ax + 0.38, pos.ay, 0, v1[0], Math.abs(v1[0]));
+  updateArrow(arrV1B, pos.bx + 0.38, pos.by, 0, v1[1], Math.abs(v1[1]));
+  updateArrow(arrV2A, pos.ax - 0.38, pos.ay, 0, v2[0], Math.abs(v2[0]));
+  updateArrow(arrV2B, pos.bx - 0.38, pos.by, 0, v2[1], Math.abs(v2[1]));
 
   // Scene labels
   placeLabel(labelA,  pos.ax, pos.ay);
   placeLabel(labelB,  pos.bx, pos.by);
   placeLabel(labelS1, (ANCHOR.x + pos.ax) / 2 - 0.55, (ANCHOR.y + pos.ay) / 2);
   placeLabel(labelS2, (pos.ax  + pos.bx) / 2 - 0.55, (pos.ay  + pos.by)  / 2);
+  // Eigenvector group labels — shown below mass B on each side
+  placeLabel(labelV1, pos.bx + 0.6, pos.by - 0.35);
+  placeLabel(labelV2, pos.bx - 0.6, pos.by - 0.35);
 
   // Pull-force visual line
   if (drag.active && drag.mass) {
@@ -718,6 +737,7 @@ function animate() {
   }
 
   updateForceDisplay();
+  updateModalAmplitudes();
   renderer.render(scene, camera);
 }
 
