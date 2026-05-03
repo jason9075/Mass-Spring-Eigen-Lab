@@ -317,6 +317,25 @@
     #amp-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
     #amp-tooltip .tt-eq   { color: var(--nord9);  font-family: monospace; }
 
+    /* ── K matrix breakdown tooltip ── */
+    #k-tooltip {
+      position: fixed;
+      background: rgba(46, 52, 64, 0.95);
+      border: 1px solid var(--nord3);
+      border-radius: 8px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      color: var(--nord5);
+      pointer-events: none;
+      z-index: 30;
+      white-space: nowrap;
+      line-height: 1.7;
+    }
+    #k-tooltip[hidden] { display: none; }
+    #k-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
+    #k-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
+
     /* ── Drag hint ── */
     #drag-hint {
       position: fixed;
@@ -387,7 +406,7 @@
   <!-- Stiffness matrix display -->
   <div id="matrix-board" aria-label="Live stiffness matrix">
     <div class="board-title">Stiffness Matrix K</div>
-    <div class="board-matrix">
+    <div class="board-matrix" id="k-matrix-hover" style="cursor:default;">
       <div>
         <span class="bracket">⎡</span>
         <span class="val" id="k11">25</span>
@@ -434,6 +453,15 @@
     <div>ext  = <span class="tt-val" id="stt-ext">1.31</span> meters  <span class="tt-eq">(len − REST)</span></div>
     <div>dir  = [<span class="tt-val" id="stt-dirx">+0.00</span>, <span class="tt-val" id="stt-diry">-1.00</span>]  <span class="tt-eq">(unit vector)</span></div>
     <div>Δ    = ext × dir</div>
+  </div>
+
+  <!-- Stiffness matrix breakdown tooltip -->
+  <div id="k-tooltip" hidden>
+    <div class="tt-name">Stiffness Matrix K</div>
+    <div>K[0][0] = k₁ + k₂ = <span class="tt-val" id="ktt-k1">15</span> + <span class="tt-val" id="ktt-k2a">10</span> = <span class="tt-val" id="ktt-11">25</span></div>
+    <div>K[0][1] = −k₂     = <span class="tt-val" id="ktt-12">−10</span></div>
+    <div>K[1][0] = −k₂     = <span class="tt-val" id="ktt-21">−10</span></div>
+    <div>K[1][1] =  k₂     = <span class="tt-val" id="ktt-22">10</span></div>
   </div>
 
   <!-- Modal amplitude breakdown tooltip -->

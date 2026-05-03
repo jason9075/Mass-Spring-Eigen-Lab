@@ -42,6 +42,13 @@ const elC1     = document.getElementById('c1-val');
 const elC2     = document.getElementById('c2-val');
 const labelAxisX = document.getElementById('label-axis-x');
 const labelAxisY = document.getElementById('label-axis-y');
+const kTooltip = document.getElementById('k-tooltip');
+const kttK1    = document.getElementById('ktt-k1');
+const kttK2a   = document.getElementById('ktt-k2a');
+const ktt11    = document.getElementById('ktt-11');
+const ktt12    = document.getElementById('ktt-12');
+const ktt21    = document.getElementById('ktt-21');
+const ktt22    = document.getElementById('ktt-22');
 const ampTooltip  = document.getElementById('amp-tooltip');
 const attName     = document.getElementById('att-name');
 const attDaLabel  = document.getElementById('att-da-label');
@@ -163,6 +170,7 @@ const hover = { mass: null, cx: 0, cy: 0 };
 const springHover = { spring: null, cx: 0, cy: 0 };
 const forceHover  = { mass: null, cx: 0, cy: 0 };
 const ampHover    = { mode: null, cx: 0, cy: 0 };
+const kHover      = { active: false, cx: 0, cy: 0 };
 
 function getDragForce() {
   if (!drag.active || !drag.mass) return null;
@@ -455,6 +463,11 @@ fbNetRow.addEventListener('pointerenter', (e) => { forceHover.mass = 'b'; forceH
 fbNetRow.addEventListener('pointermove',  (e) => { forceHover.cx = e.clientX; forceHover.cy = e.clientY; });
 fbNetRow.addEventListener('pointerleave', () => { forceHover.mass = null; forceTooltip.hidden = true; });
 
+const kMatrixHover = document.getElementById('k-matrix-hover');
+kMatrixHover.addEventListener('pointerenter', (e) => { kHover.active = true;  kHover.cx = e.clientX; kHover.cy = e.clientY; });
+kMatrixHover.addEventListener('pointermove',  (e) => { kHover.cx = e.clientX; kHover.cy = e.clientY; });
+kMatrixHover.addEventListener('pointerleave', () => { kHover.active = false; kTooltip.hidden = true; });
+
 const c1Row = document.getElementById('c1-row');
 const c2Row = document.getElementById('c2-row');
 c1Row.addEventListener('pointerenter', (e) => { ampHover.mode = 1; ampHover.cx = e.clientX; ampHover.cy = e.clientY; });
@@ -583,6 +596,20 @@ function updateSpringTooltip() {
   springTooltip.style.left = `${springHover.cx + 16}px`;
   springTooltip.style.top  = `${springHover.cy - 10}px`;
   springTooltip.hidden = false;
+}
+
+function updateKTooltip() {
+  if (!kHover.active) { kTooltip.hidden = true; return; }
+  const { k1, k2 } = P;
+  kttK1.textContent  = k1.toFixed(1);
+  kttK2a.textContent = k2.toFixed(1);
+  ktt11.textContent  = (k1 + k2).toFixed(1);
+  ktt12.textContent  = '−' + k2.toFixed(1);
+  ktt21.textContent  = '−' + k2.toFixed(1);
+  ktt22.textContent  = k2.toFixed(1);
+  kTooltip.style.left = `${kHover.cx + 16}px`;
+  kTooltip.style.top  = `${kHover.cy + 10}px`;
+  kTooltip.hidden = false;
 }
 
 function updateAmpTooltip() {
@@ -1054,6 +1081,7 @@ function animate() {
   updateSpringTooltip();
   updateForceTooltip();
   updateAmpTooltip();
+  updateKTooltip();
   renderer.render(scene, camera);
 }
 
