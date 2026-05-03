@@ -28,8 +28,9 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+      "three":   "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/",
+      "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm"
     }
   }
   </script>
@@ -200,6 +201,14 @@
       margin: 0;
     }
 
+    /* ── Matrix Board ── */
+    #matrix-board {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      z-index: 20;
+    }
+
     /* ── Drag hint ── */
     #drag-hint {
       position: fixed;
@@ -208,6 +217,29 @@
       color: var(--nord3);
       font-size: 0.72rem;
       z-index: 20;
+    }
+
+    /* ── Scene labels ── */
+    .scene-label {
+      position: fixed;
+      pointer-events: none;
+      z-index: 15;
+      transform: translate(-50%, -50%);
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      text-shadow: 0 0 6px var(--nord0), 0 0 12px var(--nord0);
+    }
+
+    .mass-label {
+      color: var(--nord13);
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .spring-label {
+      color: var(--nord3);
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
     }
   </style>
 </head>
@@ -235,7 +267,7 @@
   <!-- Three.js canvas -->
   <canvas id="canvas"></canvas>
 
-  <!-- Matrix Board -->
+  <!-- Stiffness matrix display -->
   <div id="matrix-board" aria-label="Live stiffness matrix">
     <div class="board-title">Stiffness Matrix K</div>
     <div class="board-matrix">
@@ -255,12 +287,18 @@
       </div>
     </div>
     <div class="board-eigen">
-      <div class="ev1">λ₁ = <span id="lam1">5.00</span> &nbsp; f₁ = <span id="freq1">0.36</span> Hz</div>
-      <div class="ev2">λ₂ = <span id="lam2">30.00</span> &nbsp; f₂ = <span id="freq2">0.87</span> Hz</div>
+      <div class="ev1">λ₁ = <span id="lam1">5.00</span> &nbsp; f₁ = <span id="freq1">0.356</span> Hz</div>
+      <div class="ev2">λ₂ = <span id="lam2">30.00</span> &nbsp; f₂ = <span id="freq2">0.872</span> Hz</div>
     </div>
   </div>
 
-  <div id="drag-hint">drag mass B to perturb</div>
+  <div id="drag-hint">drag mass A or B to perturb</div>
+
+  <!-- Scene labels (positioned via JS each frame) -->
+  <div class="scene-label mass-label" id="label-a">A</div>
+  <div class="scene-label mass-label" id="label-b">B</div>
+  <div class="scene-label spring-label" id="label-s1">Spring 1</div>
+  <div class="scene-label spring-label" id="label-s2">Spring 2</div>
 
   <!-- Math Modal -->
   <div id="math-modal" role="dialog" aria-modal="true" aria-labelledby="math-title" hidden>
