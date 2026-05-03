@@ -110,7 +110,7 @@
       backdrop-filter: blur(10px);
       font-size: 0.78rem;
       z-index: 20;
-      min-width: 220px;
+      min-width: 280px;
     }
 
     .board-title {
@@ -161,7 +161,7 @@
 
     .board-forces .fval {
       color: var(--nord13);
-      min-width: 7ch;
+      min-width: 6ch;
       display: inline-block;
       text-align: right;
       font-family: monospace;
@@ -325,15 +325,15 @@
       <div class="ev2">λ₂ = <span id="lam2">30.00</span> &nbsp; f₂ = <span id="freq2">0.872</span> Hz</div>
     </div>
     <div class="board-forces">
-      <div class="board-sub-title">Spring Extension</div>
-      <div class="ev1">Δx₁ = <span id="ext1" class="fval">+0.000</span> m</div>
-      <div class="ev2">Δx₂ = <span id="ext2" class="fval">+0.000</span> m</div>
-      <div class="board-sub-title">Net Spring Force Fy (N)</div>
-      <div class="ev1">F<sub>A</sub> = <span id="fa-net" class="fval">+0.00</span></div>
-      <div class="ev2">F<sub>B</sub> = <span id="fb-net" class="fval">+0.00</span></div>
+      <div class="board-sub-title">Spring Δ [x, y] m</div>
+      <div class="ev1">Δ₁ [<span id="ext1x" class="fval">+0.00</span>, <span id="ext1y" class="fval">-1.31</span>]</div>
+      <div class="ev2">Δ₂ [<span id="ext2x" class="fval">+0.00</span>, <span id="ext2y" class="fval">-0.98</span>]</div>
+      <div class="board-sub-title">Net Spring Force [x, y] N</div>
+      <div class="ev1">F<sub>A</sub> [<span id="fax-net" class="fval">+0.00</span>, <span id="fay-net" class="fval">+0.00</span>]</div>
+      <div class="ev2">F<sub>B</sub> [<span id="fbx-net" class="fval">+0.00</span>, <span id="fby-net" class="fval">+0.00</span>]</div>
     </div>
     <div class="board-forces">
-      <div class="board-sub-title">Modal Amplitude  c = vᵀ·δy</div>
+      <div class="board-sub-title">Modal Amplitude  c = v₁ᵀ·δx / v₂ᵀ·δy</div>
       <div class="ev1">c₁ = <span id="c1-val" class="fval">+0.000</span> m</div>
       <div class="ev2">c₂ = <span id="c2-val" class="fval">+0.000</span> m</div>
     </div>
@@ -348,6 +348,8 @@
   <div class="scene-label spring-label" id="label-s2">Spring 2</div>
   <div class="scene-label ev-label" id="label-v1">v₁</div>
   <div class="scene-label ev-label" id="label-v2">v₂</div>
+  <div class="scene-label" id="label-axis-x" style="color:#BF616A;font-weight:bold;font-size:0.75rem;">X</div>
+  <div class="scene-label" id="label-axis-y" style="color:#A3BE8C;font-weight:bold;font-size:0.75rem;">Y</div>
 
   <!-- Math Modal -->
   <div id="math-modal" role="dialog" aria-modal="true" aria-labelledby="math-title" hidden>

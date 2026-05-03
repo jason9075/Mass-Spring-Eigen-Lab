@@ -26,12 +26,18 @@ const elL1    = document.getElementById('lam1');
 const elL2    = document.getElementById('lam2');
 const elF1    = document.getElementById('freq1');
 const elF2    = document.getElementById('freq2');
-const elExt1  = document.getElementById('ext1');
-const elExt2  = document.getElementById('ext2');
-const elFaNet = document.getElementById('fa-net');
-const elFbNet = document.getElementById('fb-net');
-const elC1    = document.getElementById('c1-val');
-const elC2    = document.getElementById('c2-val');
+const elExt1x  = document.getElementById('ext1x');
+const elExt1y  = document.getElementById('ext1y');
+const elExt2x  = document.getElementById('ext2x');
+const elExt2y  = document.getElementById('ext2y');
+const elFaxNet = document.getElementById('fax-net');
+const elFayNet = document.getElementById('fay-net');
+const elFbxNet = document.getElementById('fbx-net');
+const elFbyNet = document.getElementById('fby-net');
+const elC1     = document.getElementById('c1-val');
+const elC2     = document.getElementById('c2-val');
+const labelAxisX = document.getElementById('label-axis-x');
+const labelAxisY = document.getElementById('label-axis-y');
 
 // ── Renderer ──────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -175,11 +181,11 @@ function setMode(mode) {
   resetToEquilibrium();
   computeEigen();
   if (mode === 1) {
-    // Mode 1: both masses displaced vertically in same direction, B more than A
-    pos.ay += eigen.v1[0] * AMP;
-    pos.by += eigen.v1[1] * AMP;
+    // Swing: horizontal pendulum displacement — spring physics provides gravity-based restoring force
+    pos.ax += eigen.v1[0] * AMP;
+    pos.bx += eigen.v1[1] * AMP;
   } else {
-    // Mode 2: A and B displaced in opposite vertical directions
+    // Stretch: vertical spring displacement — A up, B down (opposite signs in v2)
     pos.ay += eigen.v2[0] * AMP;
     pos.by += eigen.v2[1] * AMP;
   }
@@ -265,6 +271,19 @@ function updateArrow(arr, wx, wy, dirX, dirY, magnitude) {
   arr.setDirection(new THREE.Vector3(dirX, dirY, 0).normalize());
   arr.setLength(magnitude * ARROW_SCALE, 0.07, 0.05);
 }
+
+// ── Coordinate axes (bottom-left of scene) ────────────────
+const AXIS_ORIGIN = new THREE.Vector3(-3.5, -1.0, 0);
+const AXIS_LEN    = 0.75;
+const axisX = new THREE.ArrowHelper(
+  new THREE.Vector3(1, 0, 0), AXIS_ORIGIN, AXIS_LEN,
+  0xBF616A, 0.18, 0.10,
+);
+const axisY = new THREE.ArrowHelper(
+  new THREE.Vector3(0, 1, 0), AXIS_ORIGIN, AXIS_LEN,
+  0xA3BE8C, 0.18, 0.10,
+);
+scene.add(axisX, axisY);
 
 // ── Lights ────────────────────────────────────────────────
 const dirLight = new THREE.DirectionalLight(0xECEFF4, 1.6);
@@ -382,26 +401,36 @@ function updateForceDisplay() {
   const dx1 = pos.ax - ANCHOR.x, dy1 = pos.ay - ANCHOR.y;
   const len1 = Math.hypot(dx1, dy1) || 1e-4;
   const ext1 = len1 - REST;
-  const f1y  = -P.k1 * ext1 * dy1 / len1;
+  const f1x = -P.k1 * ext1 * dx1 / len1;
+  const f1y = -P.k1 * ext1 * dy1 / len1;
 
   const dx2 = pos.bx - pos.ax, dy2 = pos.by - pos.ay;
   const len2 = Math.hypot(dx2, dy2) || 1e-4;
   const ext2 = len2 - REST;
-  const f2y  = P.k2 * ext2 * dy2 / len2;
+  const f2x = P.k2 * ext2 * dx2 / len2;
+  const f2y = P.k2 * ext2 * dy2 / len2;
 
-  elExt1.textContent  = signed(ext1, 3);
-  elExt2.textContent  = signed(ext2, 3);
-  elFaNet.textContent = signed(f1y + f2y, 2);
-  elFbNet.textContent = signed(-f2y, 2);
+  elExt1x.textContent = signed(dx1, 2);
+  elExt1y.textContent = signed(dy1, 2);
+  elExt2x.textContent = signed(dx2, 2);
+  elExt2y.textContent = signed(dy2, 2);
+
+  elFaxNet.textContent = signed(f1x + f2x, 2);
+  elFayNet.textContent = signed(f1y + f2y, 2);
+  elFbxNet.textContent = signed(-f2x, 2);
+  elFbyNet.textContent = signed(-f2y, 2);
 }
 
 function updateModalAmplitudes() {
   const eq = getEquilibrium();
+  // c1: project horizontal displacement onto v1 (swing mode)
+  const dxa = pos.ax - eq.ax;
+  const dxb = pos.bx - eq.bx;
+  // c2: project vertical displacement onto v2 (stretch mode)
   const dya = pos.ay - eq.ay;
   const dyb = pos.by - eq.by;
   const { v1, v2 } = eigen;
-  // Project vertical displacement onto each normalised eigenvector
-  elC1.textContent = signed(v1[0] * dya + v1[1] * dyb, 3);
+  elC1.textContent = signed(v1[0] * dxa + v1[1] * dxb, 3);
   elC2.textContent = signed(v2[0] * dya + v2[1] * dyb, 3);
 }
 
@@ -706,12 +735,11 @@ function animate() {
   updateSpring(spring1Line, ANCHOR.x, ANCHOR.y, pos.ax, pos.ay);
   updateSpring(spring2Line, pos.ax, pos.ay, pos.bx, pos.by);
 
-  // Eigenvector arrows — both pairs vertical, representing physical mode shapes.
-  // v₁ (blue, right): both components same sign → both arrows point same direction.
-  // v₂ (orange, left): components opposite sign → A up, B down.
+  // v₁ (blue): horizontal arrows — shows swing mode (both masses move sideways together).
+  // v₂ (orange): vertical arrows — shows stretch mode (A up, B down).
   const { v1, v2 } = eigen;
-  updateArrow(arrV1A, pos.ax + 0.38, pos.ay, 0, v1[0], Math.abs(v1[0]));
-  updateArrow(arrV1B, pos.bx + 0.38, pos.by, 0, v1[1], Math.abs(v1[1]));
+  updateArrow(arrV1A, pos.ax, pos.ay + 0.35, v1[0], 0, Math.abs(v1[0]));
+  updateArrow(arrV1B, pos.bx, pos.by + 0.35, v1[1], 0, Math.abs(v1[1]));
   updateArrow(arrV2A, pos.ax - 0.38, pos.ay, 0, v2[0], Math.abs(v2[0]));
   updateArrow(arrV2B, pos.bx - 0.38, pos.by, 0, v2[1], Math.abs(v2[1]));
 
@@ -720,9 +748,12 @@ function animate() {
   placeLabel(labelB,  pos.bx, pos.by);
   placeLabel(labelS1, (ANCHOR.x + pos.ax) / 2 - 0.55, (ANCHOR.y + pos.ay) / 2);
   placeLabel(labelS2, (pos.ax  + pos.bx) / 2 - 0.55, (pos.ay  + pos.by)  / 2);
-  // Eigenvector group labels — shown below mass B on each side
-  placeLabel(labelV1, pos.bx + 0.6, pos.by - 0.35);
-  placeLabel(labelV2, pos.bx - 0.6, pos.by - 0.35);
+  // v1 label: right of B's horizontal arrow; v2 label: left of B's vertical arrow
+  placeLabel(labelV1, pos.bx + 0.85, pos.by + 0.35);
+  placeLabel(labelV2, pos.bx - 0.65, pos.by - 0.35);
+  // Axis labels: just past the arrow tips
+  placeLabel(labelAxisX, AXIS_ORIGIN.x + AXIS_LEN + 0.12, AXIS_ORIGIN.y);
+  placeLabel(labelAxisY, AXIS_ORIGIN.x, AXIS_ORIGIN.y + AXIS_LEN + 0.12);
 
   // Pull-force visual line
   if (drag.active && drag.mass) {
