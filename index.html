@@ -167,6 +167,10 @@
       font-family: monospace;
     }
 
+    /* Spring/force rows — distinct from eigenvector colors */
+    .board-forces .sp1 { color: var(--nord7); }
+    .board-forces .sp2 { color: var(--nord9); }
+
     /* ── Modal ── */
     #math-modal[hidden] { display: none; }
 
@@ -322,15 +326,17 @@
     </div>
     <div class="board-eigen">
       <div class="ev1">λ₁ = <span id="lam1">5.00</span> &nbsp; f₁ = <span id="freq1">0.356</span> Hz</div>
-      <div class="ev2">λ₂ = <span id="lam2">30.00</span> &nbsp; f₂ = <span id="freq2">0.872</span> Hz</div>
+      <div class="ev1" style="font-size:0.72rem;opacity:0.85;">v₁ = [<span id="v1a" style="font-family:monospace">+0.45</span><sub>A</sub>, <span id="v1b" style="font-family:monospace">+0.89</span><sub>B</sub>]</div>
+      <div class="ev2" style="margin-top:0.3rem;">λ₂ = <span id="lam2">30.00</span> &nbsp; f₂ = <span id="freq2">0.872</span> Hz</div>
+      <div class="ev2" style="font-size:0.72rem;opacity:0.85;">v₂ = [<span id="v2a" style="font-family:monospace">+0.89</span><sub>A</sub>, <span id="v2b" style="font-family:monospace">-0.45</span><sub>B</sub>]</div>
     </div>
     <div class="board-forces">
       <div class="board-sub-title">Spring Δ [x, y] m</div>
-      <div class="ev1">Δ₁ [<span id="ext1x" class="fval">+0.00</span>, <span id="ext1y" class="fval">-1.31</span>]</div>
-      <div class="ev2">Δ₂ [<span id="ext2x" class="fval">+0.00</span>, <span id="ext2y" class="fval">-0.98</span>]</div>
+      <div class="sp1">Δ₁ [<span id="ext1x" class="fval">+0.00</span>, <span id="ext1y" class="fval">-1.31</span>]</div>
+      <div class="sp2">Δ₂ [<span id="ext2x" class="fval">+0.00</span>, <span id="ext2y" class="fval">-0.98</span>]</div>
       <div class="board-sub-title">Net Spring Force [x, y] N</div>
-      <div class="ev1">F<sub>A</sub> [<span id="fax-net" class="fval">+0.00</span>, <span id="fay-net" class="fval">+0.00</span>]</div>
-      <div class="ev2">F<sub>B</sub> [<span id="fbx-net" class="fval">+0.00</span>, <span id="fby-net" class="fval">+0.00</span>]</div>
+      <div class="sp1">F<sub>A</sub> [<span id="fax-net" class="fval">+0.00</span>, <span id="fay-net" class="fval">+0.00</span>]</div>
+      <div class="sp2">F<sub>B</sub> [<span id="fbx-net" class="fval">+0.00</span>, <span id="fby-net" class="fval">+0.00</span>]</div>
     </div>
     <div class="board-forces">
       <div class="board-sub-title">Modal Amplitude  c = v₁ᵀ·δx / v₂ᵀ·δy</div>

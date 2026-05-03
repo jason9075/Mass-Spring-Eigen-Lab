@@ -26,6 +26,10 @@ const elL1    = document.getElementById('lam1');
 const elL2    = document.getElementById('lam2');
 const elF1    = document.getElementById('freq1');
 const elF2    = document.getElementById('freq2');
+const elV1a   = document.getElementById('v1a');
+const elV1b   = document.getElementById('v1b');
+const elV2a   = document.getElementById('v2a');
+const elV2b   = document.getElementById('v2b');
 const elExt1x  = document.getElementById('ext1x');
 const elExt1y  = document.getElementById('ext1y');
 const elExt2x  = document.getElementById('ext2x');
@@ -380,7 +384,7 @@ canvas.addEventListener('pointerleave', () => {
 
 // ── Matrix board update ───────────────────────────────────
 function updateBoard() {
-  const { K, l1, l2, f1, f2 } = eigen;
+  const { K, l1, l2, f1, f2, v1, v2 } = eigen;
   elK11.textContent = K[0][0].toFixed(0);
   elK12.textContent = K[0][1].toFixed(0);
   elK21.textContent = K[1][0].toFixed(0);
@@ -389,6 +393,10 @@ function updateBoard() {
   elL2.textContent  = l2.toFixed(2);
   elF1.textContent  = f1.toFixed(3);
   elF2.textContent  = f2.toFixed(3);
+  elV1a.textContent = (v1[0] >= 0 ? '+' : '') + v1[0].toFixed(2);
+  elV1b.textContent = (v1[1] >= 0 ? '+' : '') + v1[1].toFixed(2);
+  elV2a.textContent = (v2[0] >= 0 ? '+' : '') + v2[0].toFixed(2);
+  elV2b.textContent = (v2[1] >= 0 ? '+' : '') + v2[1].toFixed(2);
 }
 updateBoard();
 
@@ -505,29 +513,29 @@ const MODAL = {
       \\quad (\\lambda_n = \\omega_n^2 m)$$
     </p>
     <p>
-      Reading the live panel's $\\lambda_1,\\,\\lambda_2$:
+      Reading the live panel's <span style="color:#88C0D0">$\\lambda_1$</span>, <span style="color:#D08770">$\\lambda_2$</span>:
       a <em>small</em> eigenvalue means the system meets weak opposition for that mode — it vibrates slowly.
       A <em>large</em> eigenvalue means stiff opposition — the system snaps back hard and vibrates fast.
       With the defaults $k_1\\!=\\!15,\\,k_2\\!=\\!10$:
     </p>
     <ul>
-      <li><strong>$\\lambda_1 = 5$</strong> → $f_1 \\approx 0.36\\,\\text{Hz}$ — one full swing every ~2.8 s. This is <span style="color:#88C0D0">The Swing</span>.</li>
-      <li><strong>$\\lambda_2 = 30$</strong> → $f_2 \\approx 0.87\\,\\text{Hz}$ — one full cycle every ~1.1 s. This is <span style="color:#D08770">The Stretch</span>.</li>
+      <li><span style="color:#88C0D0"><strong>$\\lambda_1 = 5$</strong> → $f_1 \\approx 0.36\\,\\text{Hz}$ — one full swing every ~2.8 s. This is <strong>The Swing</strong>.</span></li>
+      <li><span style="color:#D08770"><strong>$\\lambda_2 = 30$</strong> → $f_2 \\approx 0.87\\,\\text{Hz}$ — one full cycle every ~1.1 s. This is <strong>The Stretch</strong>.</span></li>
     </ul>
     <p>Rule of thumb: stiffer springs or lighter masses → larger $\\lambda$ → higher frequency.</p>
 
     <p><strong>Step 4 — The two modes</strong></p>
     <p>
-      <span style="color:#88C0D0">■</span> <strong>Mode 1 — The Swing</strong>
-      (low frequency, $f_1 \\approx 0.36\\,\\text{Hz}$)<br>
-      Eigenvector $\\mathbf{v}_1 \\propto \\begin{bmatrix}1\\\\2\\end{bmatrix}$.
+      <span style="color:#88C0D0">■ <strong>Mode 1 — The Swing</strong>
+      (low frequency, $f_1 \\approx 0.36\\,\\text{Hz}$)</span><br>
+      Eigenvector <span style="color:#88C0D0">$\\mathbf{v}_1 \\propto \\begin{bmatrix}1\\\\2\\end{bmatrix}$</span>.
       Both entries have the <em>same sign</em>, meaning A and B move in the same direction simultaneously.
       B moves twice as far as A. The whole system rocks together like a pendulum.
     </p>
     <p>
-      <span style="color:#D08770">■</span> <strong>Mode 2 — The Stretch</strong>
-      (high frequency, $f_2 \\approx 0.87\\,\\text{Hz}$)<br>
-      Eigenvector $\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-3}\\end{bmatrix}$.
+      <span style="color:#D08770">■ <strong>Mode 2 — The Stretch</strong>
+      (high frequency, $f_2 \\approx 0.87\\,\\text{Hz}$)</span><br>
+      Eigenvector <span style="color:#D08770">$\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-3}\\end{bmatrix}$</span>.
       The entries have <em>opposite signs</em>: A goes up while B goes down (or vice versa).
       The spring between them is being stretched and compressed rapidly.
     </p>
@@ -605,29 +613,29 @@ vel = (vel + 0.5 * (accel + accelNew) * DT) * damping;</code></pre>
       \\quad (\\lambda_n = \\omega_n^2 m)$$
     </p>
     <p>
-      如何解讀看板上的 $\\lambda_1,\\,\\lambda_2$：
+      如何解讀看板上的 <span style="color:#88C0D0">$\\lambda_1$</span>、<span style="color:#D08770">$\\lambda_2$</span>：
       <em>小</em>的特徵值代表系統在該模式下受到的回復力弱，振動慢；
       <em>大</em>的特徵值代表剛度強，系統彈回快，頻率高。
       以預設值 $k_1\\!=\\!15,\\,k_2\\!=\\!10$ 為例：
     </p>
     <ul>
-      <li><strong>$\\lambda_1 = 5$</strong> → $f_1 \\approx 0.36\\,\\text{Hz}$，約每 2.8 秒振一次。這就是<span style="color:#88C0D0">同向擺動</span>。</li>
-      <li><strong>$\\lambda_2 = 30$</strong> → $f_2 \\approx 0.87\\,\\text{Hz}$，約每 1.1 秒振一次。這就是<span style="color:#D08770">反向拉伸</span>。</li>
+      <li><span style="color:#88C0D0"><strong>$\\lambda_1 = 5$</strong> → $f_1 \\approx 0.36\\,\\text{Hz}$，約每 2.8 秒振一次。這就是<strong>同向擺動</strong>。</span></li>
+      <li><span style="color:#D08770"><strong>$\\lambda_2 = 30$</strong> → $f_2 \\approx 0.87\\,\\text{Hz}$，約每 1.1 秒振一次。這就是<strong>反向拉伸</strong>。</span></li>
     </ul>
     <p>口訣：彈簧越硬（$k$ 越大）或質量越輕（$m$ 越小）→ $\\lambda$ 越大 → 頻率越高。</p>
 
     <p><strong>第四步 — 兩種振動模式</strong></p>
     <p>
-      <span style="color:#88C0D0">■</span> <strong>模式一 — 同向擺動 (The Swing)</strong>
-      （低頻，$f_1 \\approx 0.36\\,\\text{Hz}$）<br>
-      振型向量 $\\mathbf{v}_1 \\propto \\begin{bmatrix}1\\\\2\\end{bmatrix}$。
+      <span style="color:#88C0D0">■ <strong>模式一 — 同向擺動 (The Swing)</strong>
+      （低頻，$f_1 \\approx 0.36\\,\\text{Hz}$）</span><br>
+      振型向量 <span style="color:#88C0D0">$\\mathbf{v}_1 \\propto \\begin{bmatrix}1\\\\2\\end{bmatrix}$</span>。
       兩個分量<em>同號</em>，代表 A 和 B 同時往同一方向移動。
       B 的位移是 A 的兩倍。整體看起來像鐘擺一樣晃動。
     </p>
     <p>
-      <span style="color:#D08770">■</span> <strong>模式二 — 反向拉伸 (The Stretch)</strong>
-      （高頻，$f_2 \\approx 0.87\\,\\text{Hz}$）<br>
-      振型向量 $\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-3}\\end{bmatrix}$。
+      <span style="color:#D08770">■ <strong>模式二 — 反向拉伸 (The Stretch)</strong>
+      （高頻，$f_2 \\approx 0.87\\,\\text{Hz}$）</span><br>
+      振型向量 <span style="color:#D08770">$\\mathbf{v}_2 \\propto \\begin{bmatrix}2\\\\{-3}\\end{bmatrix}$</span>。
       兩個分量<em>異號</em>：A 向上時 B 向下（或反之）。
       中間的彈簧被快速拉伸與壓縮。
     </p>
@@ -717,6 +725,7 @@ gui.add(P, 'k1', 1, 50, 0.5).name('k₁  (N/m)').onChange(onParamChange);
 gui.add(P, 'k2', 1, 50, 0.5).name('k₂  (N/m)').onChange(onParamChange);
 gui.add(P, 'm1', 0.1, 5, 0.1).name('m₁  (kg)').onChange(onParamChange);
 gui.add(P, 'm2', 0.1, 5, 0.1).name('m₂  (kg)').onChange(onParamChange);
+gui.add({ reset: () => { gui.reset(); onParamChange(); } }, 'reset').name('Reset Params');
 
 // ── Animation loop ────────────────────────────────────────
 function animate() {
