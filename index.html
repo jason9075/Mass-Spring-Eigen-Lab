@@ -22,9 +22,6 @@
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
 
-  <!-- math.js for eigendecomposition -->
-  <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.2/lib/browser/math.js"></script>
-
   <!-- Three.js Import Map -->
   <script type="importmap">
   {
@@ -231,16 +228,8 @@
       margin: 0;
     }
 
-    /* ── Matrix Board ── */
-    #matrix-board {
-      position: fixed;
-      bottom: 1.5rem;
-      left: 1.5rem;
-      z-index: 20;
-    }
-
-    /* ── Mass tooltip ── */
-    #mass-tooltip {
+    /* ── Shared tooltip panel ── */
+    .tt-panel {
       position: fixed;
       background: rgba(46, 52, 64, 0.95);
       border: 1px solid var(--nord3);
@@ -254,87 +243,10 @@
       white-space: nowrap;
       line-height: 1.7;
     }
-    #mass-tooltip[hidden] { display: none; }
-    #mass-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
-    #mass-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
-
-    /* ── Spring Δ breakdown tooltip ── */
-    #spring-tooltip {
-      position: fixed;
-      background: rgba(46, 52, 64, 0.95);
-      border: 1px solid var(--nord3);
-      border-radius: 8px;
-      padding: 0.45rem 0.7rem;
-      font-size: 0.72rem;
-      font-family: 'JetBrains Mono', monospace, sans-serif;
-      color: var(--nord5);
-      pointer-events: none;
-      z-index: 30;
-      white-space: nowrap;
-      line-height: 1.7;
-    }
-    #spring-tooltip[hidden] { display: none; }
-    #spring-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
-    #spring-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
-    #spring-tooltip .tt-eq   { color: var(--nord9);  font-family: monospace; }
-
-    /* ── Force breakdown tooltip ── */
-    #force-tooltip {
-      position: fixed;
-      background: rgba(46, 52, 64, 0.95);
-      border: 1px solid var(--nord3);
-      border-radius: 8px;
-      padding: 0.45rem 0.7rem;
-      font-size: 0.72rem;
-      font-family: 'JetBrains Mono', monospace, sans-serif;
-      color: var(--nord5);
-      pointer-events: none;
-      z-index: 30;
-      white-space: nowrap;
-      line-height: 1.7;
-    }
-    #force-tooltip[hidden] { display: none; }
-    #force-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
-    #force-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
-
-    /* ── Modal amplitude breakdown tooltip ── */
-    #amp-tooltip {
-      position: fixed;
-      background: rgba(46, 52, 64, 0.95);
-      border: 1px solid var(--nord3);
-      border-radius: 8px;
-      padding: 0.45rem 0.7rem;
-      font-size: 0.72rem;
-      font-family: 'JetBrains Mono', monospace, sans-serif;
-      color: var(--nord5);
-      pointer-events: none;
-      z-index: 30;
-      white-space: nowrap;
-      line-height: 1.7;
-    }
-    #amp-tooltip[hidden] { display: none; }
-    #amp-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
-    #amp-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
-    #amp-tooltip .tt-eq   { color: var(--nord9);  font-family: monospace; }
-
-    /* ── K matrix breakdown tooltip ── */
-    #k-tooltip {
-      position: fixed;
-      background: rgba(46, 52, 64, 0.95);
-      border: 1px solid var(--nord3);
-      border-radius: 8px;
-      padding: 0.45rem 0.7rem;
-      font-size: 0.72rem;
-      font-family: 'JetBrains Mono', monospace, sans-serif;
-      color: var(--nord5);
-      pointer-events: none;
-      z-index: 30;
-      white-space: nowrap;
-      line-height: 1.7;
-    }
-    #k-tooltip[hidden] { display: none; }
-    #k-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
-    #k-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
+    .tt-panel[hidden] { display: none; }
+    .tt-panel .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
+    .tt-panel .tt-val  { color: var(--nord13); font-family: monospace; }
+    .tt-panel .tt-eq   { color: var(--nord9);  font-family: monospace; }
 
     /* ── Drag hint ── */
     #drag-hint {
@@ -446,7 +358,7 @@
   <div id="drag-hint">drag mass A or B to perturb</div>
 
   <!-- Spring Δ breakdown tooltip -->
-  <div id="spring-tooltip" hidden>
+  <div id="spring-tooltip" class="tt-panel" hidden>
     <div class="tt-name" id="stt-name">Spring 1</div>
     <div>len  = <span class="tt-val" id="stt-len">2.31</span> meters  <span class="tt-eq">(total length)</span></div>
     <div>REST = <span class="tt-val" id="stt-rest">1.00</span> meters  <span class="tt-eq">(natural length)</span></div>
@@ -456,7 +368,7 @@
   </div>
 
   <!-- Stiffness matrix breakdown tooltip -->
-  <div id="k-tooltip" hidden>
+  <div id="k-tooltip" class="tt-panel" hidden>
     <div class="tt-name">Stiffness Matrix K</div>
     <div>K[0][0] = k₁ + k₂ = <span class="tt-val" id="ktt-k1">15</span> + <span class="tt-val" id="ktt-k2a">10</span> = <span class="tt-val" id="ktt-11">25</span></div>
     <div>K[0][1] = −k₂     = <span class="tt-val" id="ktt-12">−10</span></div>
@@ -465,7 +377,7 @@
   </div>
 
   <!-- Modal amplitude breakdown tooltip -->
-  <div id="amp-tooltip" hidden>
+  <div id="amp-tooltip" class="tt-panel" hidden>
     <div class="tt-name" id="att-name">c₁ = v₁ᵀ · δx</div>
     <div>δ<span id="att-da-label">xₐ</span> = <span class="tt-val" id="att-da">+0.00</span> <span class="tt-eq">(pos − eq, mass A)</span></div>
     <div>δ<span id="att-db-label">x_B</span> = <span class="tt-val" id="att-db">+0.00</span> <span class="tt-eq">(pos − eq, mass B)</span></div>
@@ -475,7 +387,7 @@
   </div>
 
   <!-- Net Force breakdown tooltip -->
-  <div id="force-tooltip" hidden>
+  <div id="force-tooltip" class="tt-panel" hidden>
     <div class="tt-name" id="ftt-name">Force on A</div>
     <div><span id="ftt-f1-label">F₁ = −k₁·ext₁·dir₁</span> = [<span class="tt-val" id="ftt-f1x">+0.00</span>, <span class="tt-val" id="ftt-f1y">+0.00</span>] N</div>
     <div id="ftt-f2-row">F₂ = +k₂·ext₂·dir₂ = [<span class="tt-val" id="ftt-f2x">+0.00</span>, <span class="tt-val" id="ftt-f2y">+0.00</span>] N</div>
@@ -483,7 +395,7 @@
   </div>
 
   <!-- Mass hover tooltip -->
-  <div id="mass-tooltip" hidden>
+  <div id="mass-tooltip" class="tt-panel" hidden>
     <div class="tt-name" id="tt-name">Mass A</div>
     <div>pos  [<span class="tt-val" id="tt-px">+0.00</span>, <span class="tt-val" id="tt-py">+0.00</span>] meters</div>
     <div>vel  [<span class="tt-val" id="tt-vx">+0.00</span>, <span class="tt-val" id="tt-vy">+0.00</span>] meters/s</div>
