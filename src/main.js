@@ -69,6 +69,8 @@ const P = { k1: 15, k2: 10, m1: 1.0, m2: 1.0 };
 const pos = { ax: 0, ay: 0, bx: 0, by: 0 };
 const vel = { ax: 0, ay: 0, bx: 0, by: 0 };
 let paused = false;
+const SIM = { speed: 1.0 };
+let stepAccum = 0;
 
 function getEquilibrium() {
   const ext1 = (P.m1 + P.m2) * G / P.k1;
@@ -721,6 +723,7 @@ gui.domElement.style.position = 'fixed';
 gui.domElement.style.top      = '155px';
 gui.domElement.style.right    = '0';
 
+gui.add(SIM, 'speed', 0.1, 3.0, 0.1).name('Speed  ×');
 gui.add(P, 'k1', 1, 50, 0.5).name('k₁  (N/m)').onChange(onParamChange);
 gui.add(P, 'k2', 1, 50, 0.5).name('k₂  (N/m)').onChange(onParamChange);
 gui.add(P, 'm1', 0.1, 5, 0.1).name('m₁  (kg)').onChange(onParamChange);
@@ -732,8 +735,12 @@ function animate() {
   requestAnimationFrame(animate);
 
   if (!paused) {
-    stepPhysics();
-    stepPhysics(); // two sub-steps per frame for stability
+    stepAccum += SIM.speed;
+    while (stepAccum >= 1) {
+      stepPhysics();
+      stepPhysics();
+      stepAccum -= 1;
+    }
   }
 
   // Update mesh positions
