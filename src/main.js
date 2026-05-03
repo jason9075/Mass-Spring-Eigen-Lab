@@ -42,6 +42,33 @@ const elC1     = document.getElementById('c1-val');
 const elC2     = document.getElementById('c2-val');
 const labelAxisX = document.getElementById('label-axis-x');
 const labelAxisY = document.getElementById('label-axis-y');
+const forceTooltip = document.getElementById('force-tooltip');
+const fttName     = document.getElementById('ftt-name');
+const fttF1Label  = document.getElementById('ftt-f1-label');
+const fttF1x      = document.getElementById('ftt-f1x');
+const fttF1y      = document.getElementById('ftt-f1y');
+const fttF2Row    = document.getElementById('ftt-f2-row');
+const fttF2x      = document.getElementById('ftt-f2x');
+const fttF2y      = document.getElementById('ftt-f2y');
+const fttSumRow   = document.getElementById('ftt-sum-row');
+const fttSumLabel = document.getElementById('ftt-sum-label');
+const fttNetx     = document.getElementById('ftt-netx');
+const fttNety     = document.getElementById('ftt-nety');
+const springTooltip = document.getElementById('spring-tooltip');
+const sttName  = document.getElementById('stt-name');
+const sttLen   = document.getElementById('stt-len');
+const sttRest  = document.getElementById('stt-rest');
+const sttExt   = document.getElementById('stt-ext');
+const sttDirx  = document.getElementById('stt-dirx');
+const sttDiry  = document.getElementById('stt-diry');
+const tooltip = document.getElementById('mass-tooltip');
+const ttName  = document.getElementById('tt-name');
+const ttPx    = document.getElementById('tt-px');
+const ttPy    = document.getElementById('tt-py');
+const ttVx    = document.getElementById('tt-vx');
+const ttVy    = document.getElementById('tt-vy');
+const ttFx    = document.getElementById('tt-fx');
+const ttFy    = document.getElementById('tt-fy');
 
 // ── Renderer ──────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -120,7 +147,10 @@ computeEigen();
 
 // ── Drag-force state ──────────────────────────────────────
 const K_PULL = 55;
-const drag = { active: false, mass: null, cursor: new THREE.Vector3() };
+const drag  = { active: false, mass: null, cursor: new THREE.Vector3() };
+const hover = { mass: null, cx: 0, cy: 0 };
+const springHover = { spring: null, cx: 0, cy: 0 };
+const forceHover  = { mass: null, cx: 0, cy: 0 };
 
 function getDragForce() {
   if (!drag.active || !drag.mass) return null;
@@ -362,12 +392,21 @@ canvas.addEventListener('pointermove', (e) => {
   const pt = worldFromNdc(ndcFromEvent(e));
   if (drag.active) {
     drag.cursor.set(pt.x, pt.y, 0);
+    hover.mass = null;
     return;
   }
-  // hover cursor
   const dA = Math.hypot(pt.x - pos.ax, pt.y - pos.ay);
   const dB = Math.hypot(pt.x - pos.bx, pt.y - pos.by);
-  canvas.style.cursor = (dA < GRAB_R || dB < GRAB_R) ? 'grab' : '';
+  if (dA < GRAB_R) {
+    hover.mass = 'a'; hover.cx = e.clientX; hover.cy = e.clientY;
+    canvas.style.cursor = 'grab';
+  } else if (dB < GRAB_R) {
+    hover.mass = 'b'; hover.cx = e.clientX; hover.cy = e.clientY;
+    canvas.style.cursor = 'grab';
+  } else {
+    hover.mass = null;
+    canvas.style.cursor = '';
+  }
 });
 
 canvas.addEventListener('pointerup', () => {
@@ -380,9 +419,29 @@ canvas.addEventListener('pointerup', () => {
 canvas.addEventListener('pointerleave', () => {
   drag.active = false;
   drag.mass   = null;
+  hover.mass  = null;
   pullLine.visible = false;
   canvas.style.cursor = '';
 });
+
+const delta1Row = document.getElementById('delta1-row');
+const delta2Row = document.getElementById('delta2-row');
+
+delta1Row.addEventListener('pointerenter', (e) => { springHover.spring = 1; springHover.cx = e.clientX; springHover.cy = e.clientY; });
+delta1Row.addEventListener('pointermove',  (e) => { springHover.cx = e.clientX; springHover.cy = e.clientY; });
+delta1Row.addEventListener('pointerleave', () => { springHover.spring = null; springTooltip.hidden = true; });
+delta2Row.addEventListener('pointerenter', (e) => { springHover.spring = 2; springHover.cx = e.clientX; springHover.cy = e.clientY; });
+delta2Row.addEventListener('pointermove',  (e) => { springHover.cx = e.clientX; springHover.cy = e.clientY; });
+delta2Row.addEventListener('pointerleave', () => { springHover.spring = null; springTooltip.hidden = true; });
+
+const faNetRow = document.getElementById('fa-net-row');
+const fbNetRow = document.getElementById('fb-net-row');
+faNetRow.addEventListener('pointerenter', (e) => { forceHover.mass = 'a'; forceHover.cx = e.clientX; forceHover.cy = e.clientY; });
+faNetRow.addEventListener('pointermove',  (e) => { forceHover.cx = e.clientX; forceHover.cy = e.clientY; });
+faNetRow.addEventListener('pointerleave', () => { forceHover.mass = null; forceTooltip.hidden = true; });
+fbNetRow.addEventListener('pointerenter', (e) => { forceHover.mass = 'b'; forceHover.cx = e.clientX; forceHover.cy = e.clientY; });
+fbNetRow.addEventListener('pointermove',  (e) => { forceHover.cx = e.clientX; forceHover.cy = e.clientY; });
+fbNetRow.addEventListener('pointerleave', () => { forceHover.mass = null; forceTooltip.hidden = true; });
 
 // ── Matrix board update ───────────────────────────────────
 function updateBoard() {
@@ -420,10 +479,10 @@ function updateForceDisplay() {
   const f2x = P.k2 * ext2 * dx2 / len2;
   const f2y = P.k2 * ext2 * dy2 / len2;
 
-  elExt1x.textContent = signed(dx1, 2);
-  elExt1y.textContent = signed(dy1, 2);
-  elExt2x.textContent = signed(dx2, 2);
-  elExt2y.textContent = signed(dy2, 2);
+  elExt1x.textContent = signed(ext1 * dx1 / len1, 2);
+  elExt1y.textContent = signed(ext1 * dy1 / len1, 2);
+  elExt2x.textContent = signed(ext2 * dx2 / len2, 2);
+  elExt2y.textContent = signed(ext2 * dy2 / len2, 2);
 
   elFaxNet.textContent = signed(f1x + f2x, 2);
   elFayNet.textContent = signed(f1y + f2y, 2);
@@ -442,6 +501,108 @@ function updateModalAmplitudes() {
   const { v1, v2 } = eigen;
   elC1.textContent = signed(v1[0] * dxa + v1[1] * dxb, 3);
   elC2.textContent = signed(v2[0] * dya + v2[1] * dyb, 3);
+}
+
+// ── Mass hover tooltip ────────────────────────────────────
+function updateTooltip() {
+  if (!hover.mass) { tooltip.hidden = true; return; }
+  const isA = hover.mass === 'a';
+  const px = isA ? pos.ax : pos.bx;
+  const py = isA ? pos.ay : pos.by;
+  const vx = isA ? vel.ax : vel.bx;
+  const vy = isA ? vel.ay : vel.by;
+  const m  = isA ? P.m1 : P.m2;
+
+  const dx1 = pos.ax - ANCHOR.x, dy1 = pos.ay - ANCHOR.y;
+  const len1 = Math.hypot(dx1, dy1) || 1e-4;
+  const ext1 = len1 - REST;
+  const f1x = -P.k1 * ext1 * dx1 / len1;
+  const f1y = -P.k1 * ext1 * dy1 / len1;
+  const dx2 = pos.bx - pos.ax, dy2 = pos.by - pos.ay;
+  const len2 = Math.hypot(dx2, dy2) || 1e-4;
+  const ext2 = len2 - REST;
+  const f2x = P.k2 * ext2 * dx2 / len2;
+  const f2y = P.k2 * ext2 * dy2 / len2;
+  const fx = isA ? f1x + f2x : -f2x;
+  const fy = isA ? f1y + f2y : -f2y;
+
+  ttName.textContent = `Mass ${isA ? 'A' : 'B'}  (m${isA ? '₁' : '₂'} = ${m.toFixed(1)} kg)`;
+  ttPx.textContent = signed(px, 2);
+  ttPy.textContent = signed(py, 2);
+  ttVx.textContent = signed(vx, 2);
+  ttVy.textContent = signed(vy, 2);
+  ttFx.textContent = signed(fx, 2);
+  ttFy.textContent = signed(fy, 2);
+
+  tooltip.style.left = `${hover.cx + 16}px`;
+  tooltip.style.top  = `${hover.cy - 10}px`;
+  tooltip.hidden = false;
+}
+
+function updateSpringTooltip() {
+  if (!springHover.spring) { springTooltip.hidden = true; return; }
+  const s = springHover.spring;
+
+  let dx, dy, k, label;
+  if (s === 1) {
+    dx = pos.ax - ANCHOR.x; dy = pos.ay - ANCHOR.y; k = P.k1; label = 'Spring 1  (k₁ = ' + k.toFixed(1) + ' N/m)';
+  } else {
+    dx = pos.bx - pos.ax; dy = pos.by - pos.ay; k = P.k2; label = 'Spring 2  (k₂ = ' + k.toFixed(1) + ' N/m)';
+  }
+  const len = Math.hypot(dx, dy) || 1e-4;
+  const ext = len - REST;
+
+  sttName.textContent = label;
+  sttLen.textContent  = len.toFixed(3);
+  sttRest.textContent = REST.toFixed(2);
+  sttExt.textContent  = signed(ext, 3);
+  sttDirx.textContent = signed(dx / len, 2);
+  sttDiry.textContent = signed(dy / len, 2);
+
+  springTooltip.style.left = `${springHover.cx + 16}px`;
+  springTooltip.style.top  = `${springHover.cy - 10}px`;
+  springTooltip.hidden = false;
+}
+
+function updateForceTooltip() {
+  if (!forceHover.mass) { forceTooltip.hidden = true; return; }
+
+  const dx1 = pos.ax - ANCHOR.x, dy1 = pos.ay - ANCHOR.y;
+  const len1 = Math.hypot(dx1, dy1) || 1e-4;
+  const ext1 = len1 - REST;
+  const f1x = -P.k1 * ext1 * dx1 / len1;
+  const f1y = -P.k1 * ext1 * dy1 / len1;
+
+  const dx2 = pos.bx - pos.ax, dy2 = pos.by - pos.ay;
+  const len2 = Math.hypot(dx2, dy2) || 1e-4;
+  const ext2 = len2 - REST;
+  const f2x = P.k2 * ext2 * dx2 / len2;
+  const f2y = P.k2 * ext2 * dy2 / len2;
+
+  if (forceHover.mass === 'a') {
+    fttName.textContent     = 'Force on A  (Fₐ = F₁ + F₂)';
+    fttF1Label.textContent  = 'F₁ = −k₁·ext₁·dir₁';
+    fttF1x.textContent      = signed(f1x, 2);
+    fttF1y.textContent      = signed(f1y, 2);
+    fttF2x.textContent      = signed(f2x, 2);
+    fttF2y.textContent      = signed(f2y, 2);
+    fttSumLabel.textContent = 'Fₐ = F₁ + F₂       ';
+    fttNetx.textContent     = signed(f1x + f2x, 2);
+    fttNety.textContent     = signed(f1y + f2y, 2);
+    fttF2Row.hidden  = false;
+    fttSumRow.hidden = false;
+  } else {
+    fttName.textContent    = 'Force on B  (F_B = −F₂)';
+    fttF1Label.textContent = 'F_B = −k₂·ext₂·dir₂';
+    fttF1x.textContent     = signed(-f2x, 2);
+    fttF1y.textContent     = signed(-f2y, 2);
+    fttF2Row.hidden  = true;
+    fttSumRow.hidden = true;
+  }
+
+  forceTooltip.style.left = `${forceHover.cx + 16}px`;
+  forceTooltip.style.top  = `${forceHover.cy - 10}px`;
+  forceTooltip.hidden = false;
 }
 
 // ── Modal content ─────────────────────────────────────────
@@ -754,8 +915,8 @@ function animate() {
   // v₁ (blue): horizontal arrows — shows swing mode (both masses move sideways together).
   // v₂ (orange): vertical arrows — shows stretch mode (A up, B down).
   const { v1, v2 } = eigen;
-  updateArrow(arrV1A, pos.ax, pos.ay + 0.35, v1[0], 0, Math.abs(v1[0]));
-  updateArrow(arrV1B, pos.bx, pos.by + 0.35, v1[1], 0, Math.abs(v1[1]));
+  updateArrow(arrV1A, pos.ax + 0.38, pos.ay + 0.35, v1[0], 0, Math.abs(v1[0]));
+  updateArrow(arrV1B, pos.bx + 0.38, pos.by + 0.35, v1[1], 0, Math.abs(v1[1]));
   updateArrow(arrV2A, pos.ax - 0.38, pos.ay, 0, v2[0], Math.abs(v2[0]));
   updateArrow(arrV2B, pos.bx - 0.38, pos.by, 0, v2[1], Math.abs(v2[1]));
 
@@ -765,7 +926,7 @@ function animate() {
   placeLabel(labelS1, (ANCHOR.x + pos.ax) / 2 - 0.55, (ANCHOR.y + pos.ay) / 2);
   placeLabel(labelS2, (pos.ax  + pos.bx) / 2 - 0.55, (pos.ay  + pos.by)  / 2);
   // v1 label: right of B's horizontal arrow; v2 label: left of B's vertical arrow
-  placeLabel(labelV1, pos.bx + 0.85, pos.by + 0.35);
+  placeLabel(labelV1, pos.bx + 1.23, pos.by + 0.35);
   placeLabel(labelV2, pos.bx - 0.65, pos.by - 0.35);
   // Axis labels: just past the arrow tips
   placeLabel(labelAxisX, AXIS_ORIGIN.x + AXIS_LEN + 0.12, AXIS_ORIGIN.y);
@@ -785,6 +946,9 @@ function animate() {
 
   updateForceDisplay();
   updateModalAmplitudes();
+  updateTooltip();
+  updateSpringTooltip();
+  updateForceTooltip();
   renderer.render(scene, camera);
 }
 

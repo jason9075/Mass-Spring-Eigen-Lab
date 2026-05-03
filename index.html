@@ -239,6 +239,64 @@
       z-index: 20;
     }
 
+    /* ── Mass tooltip ── */
+    #mass-tooltip {
+      position: fixed;
+      background: rgba(46, 52, 64, 0.95);
+      border: 1px solid var(--nord3);
+      border-radius: 8px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      color: var(--nord5);
+      pointer-events: none;
+      z-index: 30;
+      white-space: nowrap;
+      line-height: 1.7;
+    }
+    #mass-tooltip[hidden] { display: none; }
+    #mass-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
+    #mass-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
+
+    /* ── Spring Δ breakdown tooltip ── */
+    #spring-tooltip {
+      position: fixed;
+      background: rgba(46, 52, 64, 0.95);
+      border: 1px solid var(--nord3);
+      border-radius: 8px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      color: var(--nord5);
+      pointer-events: none;
+      z-index: 30;
+      white-space: nowrap;
+      line-height: 1.7;
+    }
+    #spring-tooltip[hidden] { display: none; }
+    #spring-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
+    #spring-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
+    #spring-tooltip .tt-eq   { color: var(--nord9);  font-family: monospace; }
+
+    /* ── Force breakdown tooltip ── */
+    #force-tooltip {
+      position: fixed;
+      background: rgba(46, 52, 64, 0.95);
+      border: 1px solid var(--nord3);
+      border-radius: 8px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      color: var(--nord5);
+      pointer-events: none;
+      z-index: 30;
+      white-space: nowrap;
+      line-height: 1.7;
+    }
+    #force-tooltip[hidden] { display: none; }
+    #force-tooltip .tt-name { color: var(--nord13); font-weight: bold; margin-bottom: 0.15rem; }
+    #force-tooltip .tt-val  { color: var(--nord13); font-family: monospace; }
+
     /* ── Drag hint ── */
     #drag-hint {
       position: fixed;
@@ -332,21 +390,47 @@
       <div class="ev2" style="font-size:0.72rem;opacity:0.85;">v₂ = [<span id="v2a" style="font-family:monospace">+0.89</span><sub>A</sub>, <span id="v2b" style="font-family:monospace">-0.45</span><sub>B</sub>]</div>
     </div>
     <div class="board-forces">
-      <div class="board-sub-title">Spring Δ [x, y] m</div>
-      <div class="sp1">Δ₁ [<span id="ext1x" class="fval">+0.00</span>, <span id="ext1y" class="fval">-1.31</span>]</div>
-      <div class="sp2">Δ₂ [<span id="ext2x" class="fval">+0.00</span>, <span id="ext2y" class="fval">-0.98</span>]</div>
+      <div class="board-sub-title">Spring Δ [x, y] meters</div>
+      <div class="sp1" id="delta1-row" style="cursor:default;">Δ₁ [<span id="ext1x" class="fval">+0.00</span>, <span id="ext1y" class="fval">-1.31</span>]</div>
+      <div class="sp2" id="delta2-row" style="cursor:default;">Δ₂ [<span id="ext2x" class="fval">+0.00</span>, <span id="ext2y" class="fval">-0.98</span>]</div>
       <div class="board-sub-title">Net Spring Force [x, y] N</div>
-      <div class="sp1">F<sub>A</sub> [<span id="fax-net" class="fval">+0.00</span>, <span id="fay-net" class="fval">+0.00</span>]</div>
-      <div class="sp2">F<sub>B</sub> [<span id="fbx-net" class="fval">+0.00</span>, <span id="fby-net" class="fval">+0.00</span>]</div>
+      <div class="sp1" id="fa-net-row" style="cursor:default;">F<sub>A</sub> [<span id="fax-net" class="fval">+0.00</span>, <span id="fay-net" class="fval">+0.00</span>]</div>
+      <div class="sp2" id="fb-net-row" style="cursor:default;">F<sub>B</sub> [<span id="fbx-net" class="fval">+0.00</span>, <span id="fby-net" class="fval">+0.00</span>]</div>
     </div>
     <div class="board-forces">
       <div class="board-sub-title">Modal Amplitude  c = v₁ᵀ·δx / v₂ᵀ·δy</div>
-      <div class="ev1">c₁ = <span id="c1-val" class="fval">+0.000</span> m</div>
-      <div class="ev2">c₂ = <span id="c2-val" class="fval">+0.000</span> m</div>
+      <div class="ev1">c₁ = <span id="c1-val" class="fval">+0.000</span> meters</div>
+      <div class="ev2">c₂ = <span id="c2-val" class="fval">+0.000</span> meters</div>
     </div>
   </div>
 
   <div id="drag-hint">drag mass A or B to perturb</div>
+
+  <!-- Spring Δ breakdown tooltip -->
+  <div id="spring-tooltip" hidden>
+    <div class="tt-name" id="stt-name">Spring 1</div>
+    <div>len  = <span class="tt-val" id="stt-len">2.31</span> meters  <span class="tt-eq">(total length)</span></div>
+    <div>REST = <span class="tt-val" id="stt-rest">1.00</span> meters  <span class="tt-eq">(natural length)</span></div>
+    <div>ext  = <span class="tt-val" id="stt-ext">1.31</span> meters  <span class="tt-eq">(len − REST)</span></div>
+    <div>dir  = [<span class="tt-val" id="stt-dirx">+0.00</span>, <span class="tt-val" id="stt-diry">-1.00</span>]  <span class="tt-eq">(unit vector)</span></div>
+    <div>Δ    = ext × dir</div>
+  </div>
+
+  <!-- Net Force breakdown tooltip -->
+  <div id="force-tooltip" hidden>
+    <div class="tt-name" id="ftt-name">Force on A</div>
+    <div><span id="ftt-f1-label">F₁ = −k₁·ext₁·dir₁</span> = [<span class="tt-val" id="ftt-f1x">+0.00</span>, <span class="tt-val" id="ftt-f1y">+0.00</span>] N</div>
+    <div id="ftt-f2-row">F₂ = +k₂·ext₂·dir₂ = [<span class="tt-val" id="ftt-f2x">+0.00</span>, <span class="tt-val" id="ftt-f2y">+0.00</span>] N</div>
+    <div id="ftt-sum-row"><span id="ftt-sum-label">Fₐ = F₁ + F₂       </span> = [<span class="tt-val" id="ftt-netx">+0.00</span>, <span class="tt-val" id="ftt-nety">+0.00</span>] N</div>
+  </div>
+
+  <!-- Mass hover tooltip -->
+  <div id="mass-tooltip" hidden>
+    <div class="tt-name" id="tt-name">Mass A</div>
+    <div>pos  [<span class="tt-val" id="tt-px">+0.00</span>, <span class="tt-val" id="tt-py">+0.00</span>] meters</div>
+    <div>vel  [<span class="tt-val" id="tt-vx">+0.00</span>, <span class="tt-val" id="tt-vy">+0.00</span>] meters/s</div>
+    <div>F    [<span class="tt-val" id="tt-fx">+0.00</span>, <span class="tt-val" id="tt-fy">+0.00</span>] N</div>
+  </div>
 
   <!-- Scene labels (positioned via JS each frame) -->
   <div class="scene-label mass-label" id="label-a">A</div>
